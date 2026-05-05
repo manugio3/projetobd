@@ -1,25 +1,25 @@
 # ProjetoBD
 
 ## Checklist Minimundo 
-- [ ] Atributo composto 
-- [ ] Atributo multivalorado
-- [ ] Atributo discriminador em relacionamento
-- [ ] Atributo numérico
-- [ ] Atributo de dado
-- [ ] Atributo de texto
+- [x] Atributo composto 
+- [x] Atributo multivalorado
+- [x] Atributo discriminador em relacionamento
+- [x] Atributo numérico
+- [x] Atributo de dado
+- [x] Atributo de texto
 ----------------------------------------------------
-- [ ] Relacionamento 1:1
-- [ ] Relacionamento 1:N
-- [ ] Relacionamento N:M
-- [ ] Relacionamento parcial-total
-- [ ] Relacionamento parcial-parcial
-- [ ] Relacionamento Unário ou Auto Relacionamento
+- [x] Relacionamento 1:1
+- [x] Relacionamento 1:N
+- [x] Relacionamento N:M
+- [x] Relacionamento parcial-total
+- [x] Relacionamento parcial-parcial
+- [x] Relacionamento Unário ou Auto Relacionamento
 - [ ] Relacionamento Identificador ou Entidade Fraca 
-- [ ] Relacionamento Binário
-- [ ] Relacionamento N-ário  
+- [x] Relacionamento Binário
+- [x] Relacionamento N-ário  
 -----------------------------------------------------
 - [ ] Entidade Associativa
-- [ ] Herança (qualquer tipo
+- [x] Herança (qualquer tipo
       
 ## Checklist SQL
 - [ ] Group by/Having

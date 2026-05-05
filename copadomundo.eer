@@ -16,7 +16,7 @@
     <nodes xmi:type="eer:Attribute" xmi:id="_Lb9wcEgVEfGS8dFyX8Ty2A" name="Endereço" AttributeLinkSource="_hIsQsEgXEfGS8dFyX8Ty2A _oTd1UEgXEfGS8dFyX8Ty2A" type="IDENTIFIER" AttributeLinkTarget="_tmrGQEgVEfGS8dFyX8Ty2A"/>
     <nodes xmi:type="eer:Relationship" xmi:id="_1kDGIEgNEfGS8dFyX8Ty2A" name="Partida" relationshipLink="_EP4BYEgOEfGS8dFyX8Ty2A _Dkd6oEgTEfGS8dFyX8Ty2A _wNTxUEgVEfGS8dFyX8Ty2A"/>
     <nodes xmi:type="eer:Attribute" xmi:id="_dkVZIEgXEfGS8dFyX8Ty2A" name="CEP" AttributeLinkTarget="_hIsQsEgXEfGS8dFyX8Ty2A"/>
-    <nodes xmi:type="eer:Attribute" xmi:id="_iOBhEEgXEfGS8dFyX8Ty2A" name="Lougradoro" AttributeLinkTarget="_oTd1UEgXEfGS8dFyX8Ty2A"/>
+    <nodes xmi:type="eer:Attribute" xmi:id="_iOBhEEgXEfGS8dFyX8Ty2A" name="Logradouro" AttributeLinkTarget="_oTd1UEgXEfGS8dFyX8Ty2A"/>
     <nodes xmi:type="eer:Attribute" xmi:id="_RlW-UEgaEfGS8dFyX8Ty2A" name="CPF" type="IDENTIFIER" AttributeLinkTarget="_VfkKEEgaEfGS8dFyX8Ty2A"/>
     <nodes xmi:type="eer:Attribute" xmi:id="_S7H3YEgaEfGS8dFyX8Ty2A" name="Nome" AttributeLinkTarget="_XBwVkEgaEfGS8dFyX8Ty2A"/>
     <nodes xmi:type="eer:Attribute" xmi:id="_caNA8EgaEfGS8dFyX8Ty2A" name="País" type="IDENTIFIER" AttributeLinkTarget="_djeWIEgaEfGS8dFyX8Ty2A"/>

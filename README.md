@@ -14,12 +14,12 @@
 - [x] Relacionamento parcial-total
 - [x] Relacionamento parcial-parcial
 - [x] Relacionamento Unário ou Auto Relacionamento
-- [ ] Relacionamento Identificador ou Entidade Fraca 
+- [x] Relacionamento Identificador ou Entidade Fraca 
 - [x] Relacionamento Binário
 - [x] Relacionamento N-ário  
 -----------------------------------------------------
-- [ ] Entidade Associativa
-- [x] Herança (qualquer tipo
+- [x] Entidade Associativa
+- [x] Herança (qualquer tipo)
       
 ## Checklist SQL
 - [ ] Group by/Having

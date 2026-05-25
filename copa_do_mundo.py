@@ -1,13 +1,14 @@
 import sqlite3
 
-# CRIAR DO BANCO
+# CRIAR O BANCO
 conn = sqlite3.connect('copa_mundo.db')
 cursor = conn.cursor()
 
-# DESATIVAR AS CHAVES ESTRANGEIRAS, SE NAO OS DROPS PODEM TRAVAR
+# DESATIVAR AS CHAVES ESTRANGEIRAS, SE NÃO OS DROPS PODEM TRAVAR
 cursor.execute("PRAGMA foreign_keys = OFF")
 
-# APAGAR TABELAS CASO EXISTAM
+# APAGAR VISÕES, GATILHOS E TABELAS CASO EXISTAM
+cursor.execute("DROP TRIGGER IF EXISTS trg_valida_minutos")
 cursor.execute("DROP TABLE IF EXISTS Premio")
 cursor.execute("DROP TABLE IF EXISTS Cartoes")
 cursor.execute("DROP TABLE IF EXISTS Gol")
@@ -42,10 +43,10 @@ CREATE TABLE Jogador(
     CPF TEXT PRIMARY KEY,
     N_CAMISA INTEGER,
     POSICAO TEXT,
-    CPF_C TEXT,
+    CPF_LIDER TEXT,
 
     FOREIGN KEY(CPF) REFERENCES Pessoa(CPF),
-    FOREIGN KEY(CPF_C) REFERENCES Jogador(CPF)
+    FOREIGN KEY(CPF_LIDER) REFERENCES Jogador(CPF)
 )
 ''')
 
@@ -56,7 +57,6 @@ CREATE TABLE Idioma(
     IDIOMA TEXT,
 
     PRIMARY KEY(CPF_JG, IDIOMA),
-
     FOREIGN KEY(CPF_JG) REFERENCES Jogador(CPF)
 )
 ''')
@@ -166,7 +166,8 @@ CREATE TABLE Gol(
 
     PRIMARY KEY(CPF_JG, MINUTO, MATCH_ID_P),
 
-    FOREIGN KEY(CPF_JG, MATCH_ID_P) REFERENCES Escalacao(CPF_JG, MATCH_ID_P)
+    FOREIGN KEY(CPF_JG) REFERENCES Jogador(CPF),
+    FOREIGN KEY(MATCH_ID_P) REFERENCES Partida(MATCH_ID)
 )
 ''')
 
@@ -179,7 +180,8 @@ CREATE TABLE Cartoes(
 
     PRIMARY KEY(CPF_JG, MATCH_ID_P, CARTOES_TIPO),
 
-    FOREIGN KEY(CPF_JG, MATCH_ID_P) REFERENCES Escalacao(CPF_JG, MATCH_ID_P)
+    FOREIGN KEY(CPF_JG) REFERENCES Jogador(CPF),
+    FOREIGN KEY(MATCH_ID_P) REFERENCES Partida(MATCH_ID)
 )
 ''')
 
@@ -216,30 +218,21 @@ print("Banco criado com sucesso de forma 100% consistente!")
 
 # INSERIR PESSOAS
 pessoas = [
-    # Brasil 
     ('111', 'Vinicius Junior', 'Brasil', '2000-07-12'),
     ('112', 'Rodrygo Goes', 'Brasil', '2001-01-09'),
     ('113', 'Endrick', 'Brasil', '2006-07-21'),
     ('114', 'Alisson Becker', 'Brasil', '1992-10-02'),
     ('115', 'Marquinhos', 'Brasil', '1994-05-14'),
-
-    # Argentina 
     ('211', 'Lionel Messi', 'Argentina', '1987-06-24'),
     ('212', 'Julian Alvarez', 'Argentina', '2000-01-31'),
     ('213', 'Emiliano Martinez', 'Argentina', '1992-09-02'),
     ('214', 'Enzo Fernandez', 'Argentina', '2001-01-17'),
-
-    # França 
     ('311', 'Kylian Mbappe', 'Franca', '1998-12-20'),
     ('312', 'Ousmane Dembele', 'Franca', '1997-05-15'),
     ('313', 'Mike Maignan', 'Franca', '1995-07-03'),
-
-    # Técnicos
-    ('901', 'Carlo ancelotti', 'Brasil', '1959-06-10'),
+    ('901', 'Carlo Ancelotti', 'Brasil', '1959-06-10'),
     ('902', 'Lionel Scaloni', 'Argentina', '1978-05-16'),
     ('903', 'Didier Deschamps', 'Franca', '1968-10-15'),
-
-    # Juízes
     ('990', 'Wilton Pereira Sampaio', 'Brasil', '1981-09-07'),
     ('991', 'Michael Oliver', 'Inglaterra', '1985-02-20')
 ]
@@ -247,20 +240,15 @@ cursor.executemany('INSERT INTO Pessoa VALUES(?,?,?,?)', pessoas)
 
 # INSERIR JOGADORES 
 jogadores = [
-    # Brasil
     ('111', 7, 'Atacante', None),
     ('112', 10, 'Atacante', '111'),
     ('113', 9, 'Atacante', '111'),
     ('114', 1, 'Goleiro', None),
     ('115', 4, 'Zagueiro', None),
-
-    # Argentina
     ('211', 10, 'Atacante', None),
     ('212', 9, 'Atacante', '211'),
     ('213', 1, 'Goleiro', None),
     ('214', 8, 'Meio Campo', None),
-
-    # França
     ('311', 10, 'Atacante', None),
     ('312', 11, 'Atacante', None),
     ('313', 1, 'Goleiro', None)
@@ -299,13 +287,9 @@ cursor.executemany('INSERT INTO Estadio VALUES(?,?,?,?,?,?)', estadios)
 
 # PARTIDAS 
 partidas = [
-    # Partida 1: Brasil 3 x 1 França 
     (1, '2026-06-12', 'Grupos', 75000, 3, 1, 1, 1, 3),
-    # Partida 2: Brasil 2 x 0 Argentina 
     (2, '2026-06-28', 'Semi Final', 85000, 2, 0, 2, 1, 2),
-    # Partida 3: Argentina 1 x 2 França 
     (3, '2026-06-25', 'Grupos', 68000, 1, 2, 2, 2, 3),
-    # Partida 4: Brasil 4 x 2 França 
     (4, '2026-07-19', 'Final', 88000, 4, 2, 2, 1, 3)
 ]
 cursor.executemany('INSERT INTO Partida VALUES(?,?,?,?,?,?,?,?,?)', partidas)
@@ -316,18 +300,11 @@ cursor.executemany('INSERT INTO Apita VALUES(?,?)', apita)
 
 # ESCALAÇÕES 
 escalacoes = [
-    # JOGO 1 (Brasil x França)
     ('111', 1, 1, 'Titular', 90), ('112', 1, 1, 'Titular', 90), ('115', 1, 1, 'Titular', 90),
     ('311', 1, 3, 'Titular', 90),
-
-    # JOGO 2 (Brasil x Argentina)
     ('111', 2, 1, 'Titular', 90), ('113', 2, 1, 'Titular', 90), 
     ('211', 2, 2, 'Titular', 90), ('214', 2, 2, 'Titular', 75),
-
-    # JOGO 3 (Argentina x França)
     ('212', 3, 2, 'Titular', 90), ('311', 3, 3, 'Titular', 90), ('312', 3, 3, 'Titular', 90),
-
-    # JOGO 4 (Brasil x França)
     ('111', 4, 1, 'Titular', 90), ('112', 4, 1, 'Titular', 90), ('113', 4, 1, 'Titular', 30),
     ('311', 4, 3, 'Titular', 90)
 ]
@@ -335,17 +312,9 @@ cursor.executemany('INSERT INTO Escalacao VALUES(?,?,?,?,?)', escalacoes)
 
 # GOLS 
 gols = [
-    # Jogo 1: Brasil 3 x 1 França
-    ('111', 12, 'Normal', 1), ('112', 44, 'Normal', 1), ('111', 75, 'Falta', 1),
-    ('311', 30, 'Penalti', 1),
-
-    # Jogo 2: Brasil 2 x 0 Argentina
+    ('111', 12, 'Normal', 1), ('112', 44, 'Normal', 1), ('111', 75, 'Falta', 1), ('311', 30, 'Penalti', 1),
     ('111', 60, 'Normal', 2), ('113', 89, 'Normal', 2),
-
-    # Jogo 3: Argentina 1 x 2 França
     ('212', 40, 'Normal', 3), ('311', 15, 'Normal', 3), ('312', 70, 'Normal', 3),
-
-    # Jogo 4: Brasil 4 x 2 França
     ('111', 10, 'Normal', 4), ('111', 55, 'Normal', 4), ('112', 23, 'Normal', 4), ('113', 88, 'Normal', 4),
     ('311', 40, 'Penalti', 4), ('311', 82, 'Normal', 4)
 ]
@@ -356,6 +325,7 @@ cartoes = [
     ('115', 1, 'Amarelo'),
     ('214', 2, 'Amarelo'),
     ('311', 4, 'Amarelo')
+    
 ]
 cursor.executemany('INSERT INTO Cartoes VALUES(?,?,?)', cartoes)
 
@@ -370,19 +340,114 @@ cursor.executemany('INSERT INTO Convocacao VALUES(?,?,?)', convocacoes)
 
 # PRÊMIOS
 premios = [
-    (1, 'Bola de Ouro', 'Melhor jogador do torneio', '111', 1), # Vini Jr
-    (2, 'Chuteira de Ouro', 'Artilheiro isolado', '311', 3),    # Mbappe
-    (3, 'Luva de Ouro', 'Melhor Goleiro', '114', 1)            # Alisson Becker
+    (1, 'Bola de Ouro', 'Melhor jogador do torneio', '111', 1),
+    (2, 'Chuteira de Ouro', 'Artilheiro isolado', '311', 3), 
+    (3, 'Luva de Ouro', 'Melhor Goleiro', '114', 1) 
 ]
 cursor.executemany('INSERT INTO Premio VALUES(?,?,?,?,?)', premios)
 
 conn.commit()
-print("Banco de dados criado e alimentado com sucesso de forma 100% consistente!")
+print("Banco de dados criado e alimentado com sucesso de forma 100% consistente!\n")
 
 
-# VALIDAÇÃO 
+# TRIGGER
+cursor.execute('''
+CREATE TRIGGER trg_valida_minutos
+BEFORE INSERT ON Escalacao
+FOR EACH ROW
+BEGIN
+    SELECT CASE 
+        WHEN NEW.MIN_JOGADOS < 0 OR NEW.MIN_JOGADOS > 120 THEN
+            RAISE(ABORT, 'Erro de Regra de Negócio: Minutos jogados inválidos para uma partida!')
+    END;
+END;
+''')
+conn.commit()
 
-print('\n========== PLACAR DOS CONFRONTOS ==========')
+# CONSULTAS EXIGIDAS PELAS ESPECIFICAÇÕES
+
+print("1. [Group by/Having] - Quantidade de gols por jogador que fez mais de 2 gols:")
+cursor.execute('''
+    SELECT CPF_JG, COUNT(*) AS total_gols
+    FROM Gol
+    GROUP BY CPF_JG
+    HAVING COUNT(*) > 2
+''')
+print(cursor.fetchall(), "\n")
+
+print("2. [Junção interna] - Nome do jogador e o prêmio que ele ganhou:")
+cursor.execute('''
+    SELECT P.NOME, PR.NOME
+    FROM Premio PR
+    INNER JOIN Pessoa P ON PR.CPF_JG = P.CPF
+''')
+print(cursor.fetchall(), "\n")
+
+print("3. [Junção externa] - Nome das pessoas e seus respectivos salários de técnico (se houver):")
+cursor.execute('''
+    SELECT P.NOME, T.SALARIO
+    FROM Pessoa P
+    LEFT OUTER JOIN Tecnico T ON P.CPF = T.CPF
+''')
+print(cursor.fetchall(), "\n")
+
+print("4. [Semi junção] - Jogadores que possuem pelo menos um prêmio cadastrado:")
+cursor.execute('''
+    SELECT J.CPF, P.NOME 
+    FROM Jogador J
+    JOIN Pessoa P ON J.CPF = P.CPF
+    WHERE EXISTS (
+        SELECT 1 FROM Premio PR WHERE PR.CPF_JG = J.CPF
+    )
+''')
+print(cursor.fetchall(), "\n")
+
+print("5. [Anti-junção] - Jogadores que nunca foram advertidos com cartões:")
+cursor.execute('''
+    SELECT J.CPF, P.NOME
+    FROM Jogador J
+    JOIN Pessoa P ON J.CPF = P.CPF
+    WHERE NOT EXISTS (
+        SELECT 1 FROM Cartoes C WHERE C.CPF_JG = J.CPF
+    )
+''')
+print(cursor.fetchall(), "\n")
+
+print("6. [Subconsulta do tipo escalar] - Partidas com público acima da média de todos os jogos:")
+cursor.execute('''
+    SELECT MATCH_ID, PUBLICO 
+    FROM Partida 
+    WHERE PUBLICO > (SELECT AVG(PUBLICO) FROM Partida)
+''')
+print(cursor.fetchall(), "\n")
+
+print("7. [Subconsulta do tipo linha] - Localizar partida idêntica às condições de placar exato de Copa (3x1):")
+cursor.execute('''
+    SELECT MATCH_ID, FASE 
+    FROM Partida 
+    WHERE (PLACAR_A, PLACAR_B) = (SELECT 3, 1)
+''')
+print(cursor.fetchall(), "\n")
+
+print("8. [Subconsulta do tipo tabela] - Nome dos jogadores que atuam como 'Atacante':")
+cursor.execute('''
+    SELECT NOME 
+    FROM Pessoa 
+    WHERE CPF IN (SELECT CPF FROM Jogador WHERE POSICAO = 'Atacante')
+''')
+print(cursor.fetchall(), "\n")
+
+print("9. [Operação de conjunto] - CPFs únicos de todos que são Técnicos ou Juízes:")
+cursor.execute('''
+    SELECT CPF FROM Tecnico
+    UNION
+    SELECT CPF FROM Juiz
+''')
+print(cursor.fetchall(), "\n")
+
+
+# VALIDAÇÃO FINAL
+print('========== PLACAR DOS CONFRONTOS ==========')
 for linha in cursor.execute('''
 SELECT P.MATCH_ID, SA.PAIS, P.PLACAR_A, SB.PAIS, P.PLACAR_B, P.FASE
 FROM Partida P
@@ -403,9 +468,5 @@ JOIN Selecao S ON S.ID = PR.ID_S
 print('\n========================================')
 print('🏆 BRASIL CAMPEÃO DO MUNDO DE 2026! 🏆')
 print('========================================')
-
-conn.close()
-
-
 
 conn.close()

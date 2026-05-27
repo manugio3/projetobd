@@ -13,9 +13,9 @@ cursor.execute("DROP TABLE IF EXISTS Premio")
 cursor.execute("DROP TABLE IF EXISTS Cartoes")
 cursor.execute("DROP TABLE IF EXISTS Gol")
 cursor.execute("DROP TABLE IF EXISTS Escalacao")
-cursor.execute("DROP TABLE IF EXISTS Apita")
 cursor.execute("DROP TABLE IF EXISTS Convocacao")
 cursor.execute("DROP TABLE IF EXISTS Idioma")
+cursor.execute("DROP TABLE IF EXISTS Posicao")
 cursor.execute("DROP TABLE IF EXISTS Partida")
 cursor.execute("DROP TABLE IF EXISTS Estadio")
 cursor.execute("DROP TABLE IF EXISTS Selecao")
@@ -37,7 +37,7 @@ CREATE TABLE Pessoa(
 )
 ''')
 
-# TABELA JOGADOR
+# TABELA JOGADOR 
 cursor.execute('''
 CREATE TABLE Jogador(
     CPF TEXT PRIMARY KEY,
@@ -50,7 +50,7 @@ CREATE TABLE Jogador(
 )
 ''')
 
-# TABELA IDIOMA
+# TABELA IDIOMA 
 cursor.execute('''
 CREATE TABLE Idioma(
     CPF_JG TEXT,
@@ -81,12 +81,13 @@ CREATE TABLE Tecnico(
 )
 ''')
 
-# TABELA SELECAO
+# TABELA SELECAO 
 cursor.execute('''
 CREATE TABLE Selecao(
-    ID INTEGER PRIMARY KEY,
+    ID_SEL_ANO INTEGER PRIMARY KEY,
     RANKING_FIFA INTEGER,
     PAIS TEXT,
+    ANO INTEGER,
     CPF_T TEXT UNIQUE NOT NULL,
 
     FOREIGN KEY(CPF_T) REFERENCES Tecnico(CPF)
@@ -99,9 +100,9 @@ CREATE TABLE Estadio(
     ID INTEGER PRIMARY KEY,
     NOME TEXT,
     CAPACIDADE INTEGER,
-    ENDERECO_CEP TEXT,
-    ENDERECO_NUM TEXT,
-    ENDERECO_LOGRADOURO TEXT
+    CEP TEXT,
+    NUM TEXT,
+    LOGRADOURO TEXT
 )
 ''')
 
@@ -119,23 +120,10 @@ CREATE TABLE Partida(
     ID_TIME_B INTEGER NOT NULL,
 
     FOREIGN KEY(ID_ESTADIO) REFERENCES Estadio(ID),
-    FOREIGN KEY(ID_TIME_A) REFERENCES Selecao(ID),
-    FOREIGN KEY(ID_TIME_B) REFERENCES Selecao(ID),
+    FOREIGN KEY(ID_TIME_A) REFERENCES Selecao(ID_SEL_ANO),
+    FOREIGN KEY(ID_TIME_B) REFERENCES Selecao(ID_SEL_ANO),
 
     CHECK(ID_TIME_A <> ID_TIME_B)
-)
-''')
-
-# TABELA APITA
-cursor.execute('''
-CREATE TABLE Apita(
-    CPF_J TEXT,
-    MATCH_ID_P INTEGER,
-
-    PRIMARY KEY(CPF_J, MATCH_ID_P),
-
-    FOREIGN KEY(CPF_J) REFERENCES Juiz(CPF),
-    FOREIGN KEY(MATCH_ID_P) REFERENCES Partida(MATCH_ID)
 )
 ''')
 
@@ -152,7 +140,7 @@ CREATE TABLE Escalacao(
 
     FOREIGN KEY(CPF_JG) REFERENCES Jogador(CPF),
     FOREIGN KEY(MATCH_ID_P) REFERENCES Partida(MATCH_ID),
-    FOREIGN KEY(ID_S) REFERENCES Selecao(ID)
+    FOREIGN KEY(ID_S) REFERENCES Selecao(ID_SEL_ANO)
 )
 ''')
 
@@ -195,7 +183,7 @@ CREATE TABLE Convocacao(
     PRIMARY KEY(CPF_JG, ID_S, DATA),
 
     FOREIGN KEY(CPF_JG) REFERENCES Jogador(CPF),
-    FOREIGN KEY(ID_S) REFERENCES Selecao(ID)
+    FOREIGN KEY(ID_S) REFERENCES Selecao(ID_SEL_ANO)
 )
 ''')
 
@@ -209,12 +197,12 @@ CREATE TABLE Premio(
     ID_S INTEGER NOT NULL,
 
     FOREIGN KEY(CPF_JG) REFERENCES Jogador(CPF),
-    FOREIGN KEY(ID_S) REFERENCES Selecao(ID)
+    FOREIGN KEY(ID_S) REFERENCES Selecao(ID_SEL_ANO)
 )
 ''')
 
 conn.commit()
-print("Banco criado com sucesso de forma 100% consistente!")
+print("Banco criado com sucesso de forma 100% consistente com o DER!")
 
 # INSERIR PESSOAS
 pessoas = [
@@ -272,11 +260,11 @@ cursor.executemany('INSERT INTO Tecnico VALUES(?,?)', tecnicos)
 
 # SELEÇÕES
 selecoes = [
-    (1, 5, 'Brasil', '901'),
-    (2, 1, 'Argentina', '902'),
-    (3, 2, 'Franca', '903')
+    (1, 5, 'Brasil', 2026, '901'),
+    (2, 1, 'Argentina', 2026, '902'),
+    (3, 2, 'Franca', 2026, '903')
 ]
-cursor.executemany('INSERT INTO Selecao VALUES(?,?,?,?)', selecoes)
+cursor.executemany('INSERT INTO Selecao VALUES(?,?,?,?,?)', selecoes)
 
 # ESTÁDIOS
 estadios = [
@@ -294,9 +282,6 @@ partidas = [
 ]
 cursor.executemany('INSERT INTO Partida VALUES(?,?,?,?,?,?,?,?,?)', partidas)
 
-# APITA
-apita = [('991', 1), ('990', 2), ('991', 3), ('990', 4)]
-cursor.executemany('INSERT INTO Apita VALUES(?,?)', apita)
 
 # ESCALAÇÕES 
 escalacoes = [
@@ -325,7 +310,6 @@ cartoes = [
     ('115', 1, 'Amarelo'),
     ('214', 2, 'Amarelo'),
     ('311', 4, 'Amarelo')
-    
 ]
 cursor.executemany('INSERT INTO Cartoes VALUES(?,?,?)', cartoes)
 
@@ -347,7 +331,7 @@ premios = [
 cursor.executemany('INSERT INTO Premio VALUES(?,?,?,?,?)', premios)
 
 conn.commit()
-print("Banco de dados criado e alimentado com sucesso de forma 100% consistente!\n")
+print("Banco de dados alimentado com sucesso!\n")
 
 
 # TRIGGER
@@ -364,7 +348,7 @@ END;
 ''')
 conn.commit()
 
-# CONSULTAS EXIGIDAS PELAS ESPECIFICAÇÕES
+# CONSULTAS EXIGIDAS
 
 print("1. [Group by/Having] - Quantidade de gols por jogador que fez mais de 2 gols:")
 cursor.execute('''
@@ -429,7 +413,7 @@ cursor.execute('''
 ''')
 print(cursor.fetchall(), "\n")
 
-print("8. [Subconsulta do tipo tabela] - Nome dos jogadores que atuam como 'Atacante':")
+print("8. [Subconsulta do tipo tabela] - Nome dos jogadores que atuam como 'Atacante' (Apontando corretamente para Jogador):")
 cursor.execute('''
     SELECT NOME 
     FROM Pessoa 
@@ -451,8 +435,8 @@ print('========== PLACAR DOS CONFRONTOS ==========')
 for linha in cursor.execute('''
 SELECT P.MATCH_ID, SA.PAIS, P.PLACAR_A, SB.PAIS, P.PLACAR_B, P.FASE
 FROM Partida P
-JOIN Selecao SA ON P.ID_TIME_A = SA.ID
-JOIN Selecao SB ON P.ID_TIME_B = SB.ID
+JOIN Selecao SA ON P.ID_TIME_A = SA.ID_SEL_ANO
+JOIN Selecao SB ON P.ID_TIME_B = SB.ID_SEL_ANO
 '''):
     print(f"Jogo {linha[0]} ({linha[5]}): {linha[1]} {linha[2]} x {linha[4]} {linha[3]}")
 
@@ -461,7 +445,7 @@ for linha in cursor.execute('''
 SELECT PR.NOME, PE.NOME, S.PAIS
 FROM Premio PR
 JOIN Pessoa PE ON PE.CPF = PR.CPF_JG
-JOIN Selecao S ON S.ID = PR.ID_S
+JOIN Selecao S ON S.ID_SEL_ANO = PR.ID_S
 '''):
     print(f"Prêmio: {linha[0]} | Ganhador: {linha[1]} ({linha[2]})")
 
@@ -470,3 +454,4 @@ print('🏆 BRASIL CAMPEÃO DO MUNDO DE 2026! 🏆')
 print('========================================')
 
 conn.close()
+
